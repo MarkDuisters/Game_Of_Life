@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using QFSW.QC;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 public class GenerateGrid : MonoBehaviour
@@ -47,6 +48,7 @@ public class GenerateGrid : MonoBehaviour
     // Generate a 2D grid with y mapped flat on the world z axis.
     //Invoke a coroutine so we can control the spawnrate.
     [Command ("Generate_2D_grid")]
+    [Button ("Generate 2D grid")]
     void GG2D (Vector2Int dimensions, float spacing, float generationDelay = 0f)
     {
         StartCoroutine (GG2DCoroutine (dimensions, spacing, generationDelay));
@@ -74,6 +76,7 @@ public class GenerateGrid : MonoBehaviour
     // Generate a 3D grid with xyz mapped flat on the world axis.
     //Invoke a coroutine so we can control the spawnrate.
     [Command ("Generate_3D_grid")]
+    [Button ("Generate 3D grid")]
     void GG3D (Vector3Int dimensions, float spacing, float generationDelay = 0f)
     {
         StartCoroutine (GG3DCoroutine (dimensions, spacing, generationDelay));
@@ -126,11 +129,16 @@ public class GenerateGrid : MonoBehaviour
     }
 
     [Command ("RemoveGrid")]
-    [ContextMenu ("Remove grid.")]
+    [Button ("Remove grid.")]
     void RemoveGrid ()
     {
+        int getCount = transform.childCount;
 
-        for (int i = transform.childCount; i > 0;i--)
+        if (getCount <= 0)
+        {
+            return;
+        }
+        for (int i = getCount; i > 0; i--)
         {
             transform.GetChild (0);
         }
