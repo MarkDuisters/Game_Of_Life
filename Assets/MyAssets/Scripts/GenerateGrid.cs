@@ -15,6 +15,7 @@ public class GenerateGrid : MonoBehaviour
     bool generateOnStart = false;
     [SerializeField ()]
     bool ThreeDgrid = false;
+
     [SerializeField]
     Vector3Int setDimensions = new Vector3Int (1, 1, 1);
     [SerializeField]
@@ -22,7 +23,11 @@ public class GenerateGrid : MonoBehaviour
     [SerializeField]
     float generateDelay = 0;
 
-    //private properties to make sure the stripipng system does not break our generated cube.
+    //privates to store our grid array
+
+    GameObject[, , ] gridList;
+
+    //private properties to make sure the strippipng system does not break our generated cube.
     MeshFilter refFilter;
     MeshRenderer refRenderer;
     Collider refCollider;
@@ -30,17 +35,18 @@ public class GenerateGrid : MonoBehaviour
     // Start is called before the first frame update
     void Start ()
     {
+        print ("werkt");
         if (generateOnStart)
         {
             InitializeObject ();
             if (ThreeDgrid)
             {
-                StartCoroutine (GG3DCoroutine (setDimensions, spacing, generateDelay));
+                GGThreeD (setDimensions, spacing, generateDelay);
 
             }
             else
             {
-                StartCoroutine (GG2DCoroutine ((Vector2Int) setDimensions, spacing, generateDelay));
+                GGTwoD ((Vector2Int) setDimensions, spacing, generateDelay);
             }
         }
     }
@@ -49,25 +55,31 @@ public class GenerateGrid : MonoBehaviour
     //Invoke a coroutine so we can control the spawnrate.
     [Command ("Generate_2D_grid")]
     [Button ("Generate 2D grid")]
-    void GG2D (Vector2Int dimensions, float spacing, float generationDelay = 0f)
+    void GGTwoD (Vector2Int dimensions, float spacing, float generationDelay = 0f)
     {
-        StartCoroutine (GG2DCoroutine (dimensions, spacing, generationDelay));
+        StartCoroutine (GGTwoDCoroutine (dimensions, spacing, generationDelay));
     }
 
-    IEnumerator GG2DCoroutine (Vector2Int dimensions, float spacing, float generationDelay = 0f)
+    IEnumerator GGTwoDCoroutine (Vector2Int dimensions, float spacing, float generationDelay = 0f)
     {
+        gridList = new GameObject[dimensions.x, dimensions.y, 0];
+
         InitializeObject ();
 
-        RemoveGrid ();
+        // RemoveGrid ();
 
-        for (int y = -dimensions.y / 2; y < dimensions.y / 2; y++)
+        for (int y = 0; y < dimensions.y; y++)
         {
-            for (int x = -dimensions.x / 2; x < dimensions.x / 2; x++)
+
+            print ("werkt2dloopY");
+            for (int x = 0; x < dimensions.x; x++)
             {
+                print ("werkt2dloopX");
                 print ($"{x},{y}");
 
                 GameObject clone = Instantiate (refObject, new Vector3 (transform.position.x + x, transform.position.y - y, 0), Quaternion.identity, transform);
                 clone.name = clone.name + $"_{x},{y}";
+                gridList[x, y, 0] = clone;
                 yield return new WaitForSeconds (generationDelay);
             }
         }
@@ -77,21 +89,22 @@ public class GenerateGrid : MonoBehaviour
     //Invoke a coroutine so we can control the spawnrate.
     [Command ("Generate_3D_grid")]
     [Button ("Generate 3D grid")]
-    void GG3D (Vector3Int dimensions, float spacing, float generationDelay = 0f)
+    void GGThreeD (Vector3Int dimensions, float spacing, float generationDelay = 0f)
     {
-        StartCoroutine (GG3DCoroutine (dimensions, spacing, generationDelay));
+        gridList = new GameObject[dimensions.x, dimensions.y, dimensions.z];
+        StartCoroutine (GGThreeDCoroutine (dimensions, spacing, generationDelay));
     }
 
-    IEnumerator GG3DCoroutine (Vector3Int dimensions, float spacing, float generationDelay = 0f)
+    IEnumerator GGThreeDCoroutine (Vector3Int dimensions, float spacing, float generationDelay = 0f)
     {
         InitializeObject ();
         RemoveGrid ();
 
-        for (int z = -dimensions.z / 2; z < dimensions.z / 2; z++)
+        for (int z = 0; z < dimensions.z; z++)
         {
-            for (int y = -dimensions.y / 2; y < dimensions.y / 2; y++)
+            for (int y = 0; y < dimensions.y; y++)
             {
-                for (int x = -dimensions.x / 2; x < dimensions.x / 2; x++)
+                for (int x = 0; x < dimensions.x; x++)
                 {
                     print ($"{x},{y},{z}");
                     GameObject clone = Instantiate (refObject, new Vector3 (transform.position.x + x, transform.position.y - y, transform.position.z + z), Quaternion.identity, transform);
@@ -128,19 +141,24 @@ public class GenerateGrid : MonoBehaviour
 
     }
 
-    [Command ("RemoveGrid")]
     [Button ("Remove grid.")]
+    [Command ("RemoveGrid")]
     void RemoveGrid ()
     {
-        int getCount = transform.childCount;
 
-        if (getCount <= 0)
+        try
         {
-            return;
+
+            foreach (GameObject go in gridList)
+            {
+                Destroy (go);
+                gridList = null;
+            }
+
         }
-        for (int i = getCount; i > 0; i--)
+        catch (System.Exception e)
         {
-            transform.GetChild (0);
+            print (e);
         }
 
     }
