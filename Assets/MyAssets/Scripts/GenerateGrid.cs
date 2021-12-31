@@ -2,7 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using QFSW.QC;
 using Sirenix.OdinInspector;
+using Unity.EditorCoroutines.Editor;
 using UnityEngine;
+#if UNITY_EDITOR
+#endif
 
 public class GenerateGrid : MonoBehaviour
 {
@@ -13,19 +16,15 @@ public class GenerateGrid : MonoBehaviour
     Material refMat;
     [SerializeField]
     bool generateOnStart = false;
-    [SerializeField ()]
-    bool ThreeDgrid = false;
 
     [SerializeField]
-    Vector3Int setDimensions = new Vector3Int (1, 1, 1);
+    Vector3Int setDimensions = new Vector3Int (1, 1, 0);
     [SerializeField]
     float spacing = 1f;
-    [SerializeField]
-    float generateDelay = 0;
 
     //privates to store our grid array
-
-    GameObject[, , ] gridList;
+    [TableMatrix (SquareCells = true)]
+    public GameObject[, , ] gridList = new GameObject[0, 0, 0];
 
     //private properties to make sure the strippipng system does not break our generated cube.
     MeshFilter refFilter;
@@ -33,55 +32,15 @@ public class GenerateGrid : MonoBehaviour
     Collider refCollider;
 
     // Start is called before the first frame update
+
     void Start ()
     {
-        print ("werkt");
         if (generateOnStart)
         {
             InitializeObject ();
-            if (ThreeDgrid)
-            {
-                GGThreeD (setDimensions, spacing, generateDelay);
 
-            }
-            else
-            {
-                GGTwoD ((Vector2Int) setDimensions, spacing, generateDelay);
-            }
-        }
-    }
+            GG (setDimensions, spacing);
 
-    // Generate a 2D grid with y mapped flat on the world z axis.
-    //Invoke a coroutine so we can control the spawnrate.
-    [Command ("Generate_2D_grid")]
-    [Button ("Generate 2D grid")]
-    void GGTwoD (Vector2Int dimensions, float spacing, float generationDelay = 0f)
-    {
-        StartCoroutine (GGTwoDCoroutine (dimensions, spacing, generationDelay));
-    }
-
-    IEnumerator GGTwoDCoroutine (Vector2Int dimensions, float spacing, float generationDelay = 0f)
-    {
-        gridList = new GameObject[dimensions.x, dimensions.y, 0];
-
-        InitializeObject ();
-
-        // RemoveGrid ();
-
-        for (int y = 0; y < dimensions.y; y++)
-        {
-
-            print ("werkt2dloopY");
-            for (int x = 0; x < dimensions.x; x++)
-            {
-                print ("werkt2dloopX");
-                print ($"{x},{y}");
-
-                GameObject clone = Instantiate (refObject, new Vector3 (transform.position.x + x, transform.position.y - y, 0), Quaternion.identity, transform);
-                clone.name = clone.name + $"_{x},{y}";
-                gridList[x, y, 0] = clone;
-                yield return new WaitForSeconds (generationDelay);
-            }
         }
     }
 
@@ -89,16 +48,26 @@ public class GenerateGrid : MonoBehaviour
     //Invoke a coroutine so we can control the spawnrate.
     [Command ("Generate_3D_grid")]
     [Button ("Generate 3D grid")]
-    void GGThreeD (Vector3Int dimensions, float spacing, float generationDelay = 0f)
+    void GG (Vector3Int dimensions, float spacing)
     {
         gridList = new GameObject[dimensions.x, dimensions.y, dimensions.z];
-        StartCoroutine (GGThreeDCoroutine (dimensions, spacing, generationDelay));
+        //We need Unity's editor version of the coroutine to properly spawn our objects.
+#if UNITY_EDITOR
+        EditorCoroutineUtility.StartCoroutine (GGCoroutine (dimensions, spacing), this);
+#else
+        StartCoroutine (GGCoroutine (dimensions, spacing));
+#endif
+
     }
 
-    IEnumerator GGThreeDCoroutine (Vector3Int dimensions, float spacing, float generationDelay = 0f)
+    IEnumerator GGCoroutine (Vector3Int dimensions, float spacing = 1)
     {
         InitializeObject ();
         RemoveGrid ();
+
+        gridList = new GameObject[dimensions.x, dimensions.y, dimensions.z];
+
+        //Little bit of a hacky solution, But this way our loop will keep running in the editor when the function gets invoked through Odin.
 
         for (int z = 0; z < dimensions.z; z++)
         {
@@ -106,13 +75,15 @@ public class GenerateGrid : MonoBehaviour
             {
                 for (int x = 0; x < dimensions.x; x++)
                 {
-                    print ($"{x},{y},{z}");
+                    //    print ($"{x},{y},{z}");
                     GameObject clone = Instantiate (refObject, new Vector3 (transform.position.x + x, transform.position.y - y, transform.position.z + z), Quaternion.identity, transform);
                     clone.name = clone.name + $"_{x},{y},{z}";
-                    yield return new WaitForSeconds (generationDelay);
+                    gridList[x, y, z] = clone;
+                    yield return null;
                 }
             }
         }
+
     }
 
     void InitializeObject ()
@@ -145,16 +116,37 @@ public class GenerateGrid : MonoBehaviour
     [Command ("RemoveGrid")]
     void RemoveGrid ()
     {
+        if (gridList.Length <= 0)
+        {
+            return;
+        }
 
         try
         {
 
-            foreach (GameObject go in gridList)
+            //Little bit of a hacky solution, But this way our foreachloop will keep running in the editor when the function gets invoked through Odin.
+            //This mainly because I was to lazy to set up a proper EditorCoroutine.
+#if UNITY_EDITOR
+            while (gridList.Length > 0)
             {
-                Destroy (go);
-                gridList = null;
+#endif
+                int childCount = transform.childCount;
+                GameObject[] getChildren = new GameObject[childCount];
+                //first get all the children
+                for (int i = 0; i < childCount; i++)
+                {
+                    getChildren[i] = transform.GetChild (i).gameObject;
+                }
+                //next delate all of them
+                foreach (GameObject go in getChildren)
+                {
+                    DestroyImmediate (go);
+                    //after destroying all the children we set our reference list to 0;
+                    gridList = new GameObject[0, 0, 0];
+                }
+#if UNITY_EDITOR
             }
-
+#endif
         }
         catch (System.Exception e)
         {
@@ -162,4 +154,5 @@ public class GenerateGrid : MonoBehaviour
         }
 
     }
+
 }
