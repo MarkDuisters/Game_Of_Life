@@ -76,7 +76,7 @@ public class GenerateGrid : MonoBehaviour
                 for (int x = 0; x < dimensions.x; x++)
                 {
                     //    print ($"{x},{y},{z}");
-                    GameObject clone = Instantiate (refObject, new Vector3 (transform.position.x + x, transform.position.y - y, transform.position.z + z), Quaternion.identity, transform);
+                    GameObject clone = Instantiate (refObject, new Vector3 (transform.position.x + x * spacing, transform.position.y - y * spacing, transform.position.z + z * spacing), Quaternion.identity, transform);
                     clone.name = clone.name + $"_{x},{y},{z}";
                     gridList[x, y, z] = clone;
                     yield return null;
@@ -116,22 +116,18 @@ public class GenerateGrid : MonoBehaviour
     [Command ("RemoveGrid")]
     void RemoveGrid ()
     {
-        if (gridList.Length <= 0)
-        {
-            return;
-        }
-
         try
         {
 
+            int childCount = transform.childCount;
+            GameObject[] getChildren = new GameObject[childCount];
             //Little bit of a hacky solution, But this way our foreachloop will keep running in the editor when the function gets invoked through Odin.
             //This mainly because I was to lazy to set up a proper EditorCoroutine.
 #if UNITY_EDITOR
-            while (gridList.Length > 0)
+            while (childCount > 0)
             {
 #endif
-                int childCount = transform.childCount;
-                GameObject[] getChildren = new GameObject[childCount];
+
                 //first get all the children
                 for (int i = 0; i < childCount; i++)
                 {
