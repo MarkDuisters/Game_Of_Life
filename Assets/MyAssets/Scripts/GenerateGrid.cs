@@ -16,6 +16,8 @@ public class GenerateGrid : MonoBehaviour
     Material refMat;
     [SerializeField]
     bool generateOnStart = false;
+    [SerializeField]
+    bool showBounds = false;
 
     [SerializeField]
     Vector3Int setDimensions = new Vector3Int (1, 1, 0);
@@ -23,41 +25,63 @@ public class GenerateGrid : MonoBehaviour
     float spacing = 1f;
 
     //privates to store our grid array
-    [TableMatrix (SquareCells = true)]
-    public GameObject[, , ] gridList = new GameObject[0, 0, 0];
+
+    public GameObject[, , ] gridListRead;
+
+    //Create a singleton and a static reference to itself
+    static public GenerateGrid instance;
+
+    [SerializeField]
+    Camera cam;
 
     //private properties to make sure the strippipng system does not break our generated cube.
     MeshFilter refFilter;
     MeshRenderer refRenderer;
     Collider refCollider;
 
-    // Start is called before the first frame update
+    //privates for saving mesh bounds and center
+    Vector3 boundSize;
+    Vector3 boundCenter;
 
     void Start ()
     {
+        //make sure only one instance exists.
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy (this.gameObject);
+        }
+
+        //Initialize and generate a grid.
         if (generateOnStart)
         {
             InitializeObject ();
 
             GG (setDimensions, spacing);
-
         }
     }
 
     // Generate a 3D grid with xyz mapped flat on the world axis.
     //Invoke a coroutine so we can control the spawnrate.
-    [Command ("Generate_3D_grid")]
-    [Button ("Generate 3D grid")]
-    void GG (Vector3Int dimensions, float spacing)
+    [Command ("Generate_grid")]
+    [Button ("Generate grid")]
+    void GG (Vector3Int dimensions, float spacing = 1)
     {
-        gridList = new GameObject[dimensions.x, dimensions.y, dimensions.z];
         //We need Unity's editor version of the coroutine to properly spawn our objects.
+        //We also neet an if statement to check if we are playing or not to prevent the regular routine from partially running.
 #if UNITY_EDITOR
-        EditorCoroutineUtility.StartCoroutine (GGCoroutine (dimensions, spacing), this);
-#else
-        StartCoroutine (GGCoroutine (dimensions, spacing));
+        if (Application.isEditor)
+        {
+            EditorCoroutineUtility.StartCoroutine (GGCoroutine (dimensions, spacing), this);
+        }
 #endif
-
+        if (Application.isPlaying)
+        {
+            StartCoroutine (GGCoroutine (dimensions, spacing));
+        }
     }
 
     IEnumerator GGCoroutine (Vector3Int dimensions, float spacing = 1)
@@ -65,24 +89,37 @@ public class GenerateGrid : MonoBehaviour
         InitializeObject ();
         RemoveGrid ();
 
-        gridList = new GameObject[dimensions.x, dimensions.y, dimensions.z];
+        GameObject[, , ] gridList = new GameObject[dimensions.x, dimensions.y, dimensions.z];
 
-        //Little bit of a hacky solution, But this way our loop will keep running in the editor when the function gets invoked through Odin.
-
+        int zPosOffset = -dimensions.z / 2; //we need to count the offset manually because the index of the loop can't be negative since it is used for our array.
         for (int z = 0; z < dimensions.z; z++)
         {
+            int yPosOffset = -dimensions.y / 2;
             for (int y = 0; y < dimensions.y; y++)
             {
+                int xPosOffset = -dimensions.x / 2;
                 for (int x = 0; x < dimensions.x; x++)
                 {
-                    //    print ($"{x},{y},{z}");
-                    GameObject clone = Instantiate (refObject, new Vector3 (transform.position.x + x * spacing, transform.position.y - y * spacing, transform.position.z + z * spacing), Quaternion.identity, transform);
+
+                    GameObject clone = Instantiate (refObject, new Vector3 (transform.position.x + xPosOffset, transform.position.y + -yPosOffset, transform.position.z + zPosOffset), transform.rotation, transform);
                     clone.name = clone.name + $"_{x},{y},{z}";
+                    if (clone.GetComponent<Cell_Behaviour> () == null)
+                    {
+                        clone.AddComponent<Cell_Behaviour> ();
+                    }
                     gridList[x, y, z] = clone;
+
                     yield return null;
+                    xPosOffset++;
+
                 }
+                yPosOffset++;
+
             }
+            zPosOffset++;
         }
+
+        gridListRead = gridList; //saves a copy of the list in case we need to read the values from another class.
 
     }
 
@@ -138,7 +175,8 @@ public class GenerateGrid : MonoBehaviour
                 {
                     DestroyImmediate (go);
                     //after destroying all the children we set our reference list to 0;
-                    gridList = new GameObject[0, 0, 0];
+                    gridListRead = new GameObject[0, 0, 0];
+                    CalculateBounds (gridListRead);
                 }
 #if UNITY_EDITOR
             }
@@ -150,5 +188,37 @@ public class GenerateGrid : MonoBehaviour
         }
 
     }
+
+    void FitGridInCamera (Camera cam, GameObject[, , ] gridlist)
+    {
+        if (cam == null)
+        {
+            cam = Camera.main;
+        }
+        CalculateBounds (gridlist);
+
+    }
+
+    //calculates the bounds and center, then output them in the boundCenter and boundSize parameters.
+    void CalculateBounds (GameObject[, , ] gridList)
+    {
+        Bounds bounds = new Bounds ();
+        foreach (GameObject go in gridList)
+        {
+            bounds.Encapsulate (go.transform.position);
+        }
+
+        boundCenter = bounds.center;
+        boundSize = bounds.size;
+
+    }
+#if UNITY_EDITOR 
+
+    void OnDrawGizmosSelected ()
+    {
+        Gizmos.color = new Color (0, 1, 0, 0.50f);
+        Gizmos.DrawCube (boundCenter, boundSize * 1.15f);
+    }
+#endif
 
 }

@@ -9,10 +9,10 @@ public class Cell : MonoBehaviour
 {
 
     [SerializeField]
-    bool alive;
+    public bool alive;
     [SerializeField]
-    int amountOfNeighbors = 0;
+    public int amountOfNeighbors = 0;
     [SerializeField]
-    Vector3Int listIndex;
+    public Vector3Int listIndex;
 
 }
