@@ -112,4 +112,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   debugMaterial: {fileID: 2100000, guid: 03e5327fb50b8e24da668632bb54e59f, type: 2}
-  enableDebug: 1
+  enableDebug: 0

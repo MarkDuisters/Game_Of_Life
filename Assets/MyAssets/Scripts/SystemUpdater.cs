@@ -3,19 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
+//When adding a system udpate to our object, we always need a grid to pull data from.
+[RequireComponent(typeof(GenerateGrid))]
 public class SystemUpdater : MonoBehaviour
 {
+    [SerializeField]
+    GenerateGrid getGrid;
+
     [SerializeField]
     float updateDelay = 1;
 
     float oldTime;//Here we store the previoussytem time. This way we can always compare this value with the "up to date time" and check the difference.
 
-   public UnityEvent _updateEvent;
+    public UnityEvent _updateEvent = new UnityEvent();
 
     static public SystemUpdater instance;
 
-    //For this system we are not going to use Unity's Update loop. Instead we are going to make our own itteration based on system time.
-    //This system is dependent on the grids static instance to get its data, so preferably only run this during runtime.
+
+    //This system is dependent on the grid to get its data, so preferably only run this during runtime.
     void Start()
     {
         if (instance == null)
@@ -28,26 +33,40 @@ public class SystemUpdater : MonoBehaviour
             _updateEvent = new UnityEvent();
 
         }
+        getGrid = GetComponent<GenerateGrid>();
 
-        SystemUpdate();
+        getGrid.Initialize();
+
 
     }
 
+    void Update()
+    {
+        if (!getGrid.gridInitialized)
+        {
+            return;
+        }
+        else
+        {
 
+            SystemUpdate();
+        }
+
+    }
     // Update is called once per frame
     void SystemUpdate()
     {
-        while (GenerateGrid.instance.gridInitialized)
+        //        print("updating");
+        if (Time.time >= oldTime + updateDelay)
         {
+            print("invoked event");
+            _updateEvent.Invoke();
 
-            if (Time.time >= oldTime + updateDelay)
-            {
-                _updateEvent.Invoke();
+            oldTime = Time.time;
 
-                oldTime = Time.time;
-
-            }
         }
+
+
 
     }
 

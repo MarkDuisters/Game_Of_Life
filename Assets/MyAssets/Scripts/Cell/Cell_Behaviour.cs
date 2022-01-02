@@ -26,18 +26,25 @@ These rules, which compare the behavior of the automaton to real life, can be co
 
     void Start()
     {
+        alive = IntToBool(Random.Range(0, 2));
+        GetComponent<MeshRenderer>().enabled = alive;
 
-        SystemUpdater.instance._updateEvent.AddListener(UpdateThisCell);
+        //        print("registered cell index: " + listIndex);
+        SystemUpdater.instance._updateEvent.AddListener(() => UpdateThisCell());
+
+
     }
 
 
-    void UpdateThisCell()
+    public void UpdateThisCell()
     {
-        GetComponent<MeshRenderer>().enabled = CheckNeighbors();
+
+        CheckNeighbors();
+        GetComponent<MeshRenderer>().enabled = alive;
     }
 
     [Button]
-    bool CheckNeighbors()
+    void CheckNeighbors()
     {
         //At the moment this matrix is filled with test data. However later-on we will have to base these values on the neighbor cell's alive state where true = 1 and false = 0.
         //Note that the middle value of the whole matrix represents our cell. We should take this cell into account and ignore it in our count.
@@ -56,7 +63,7 @@ These rules, which compare the behavior of the automaton to real life, can be co
         if (amountOfNeighbors < 2)
         {
             alive = false;
-            print("Not enough neighbors alive to survive. The Cell dies of lonelyness :(." + alive);
+            //            print("Not enough neighbors alive to survive. The Cell dies of lonelyness :(." + alive);
 
 
         }
@@ -64,22 +71,22 @@ These rules, which compare the behavior of the automaton to real life, can be co
         else if (amountOfNeighbors == 3 && !alive)
         {
             alive = true;
-            print("Exactly 3 neighbors found. Congratulations the Cell had a baby. (Dead cell turned back to life)." + alive);
+            //print("Exactly 3 neighbors found. Congratulations the Cell had a baby. (Dead cell turned back to life)." + alive);
         }
         else if (amountOfNeighbors > 3)
         {
             alive = false;
-            print("3 or more neighbors are alive. Cell dies of over population." + alive);
+            //     print("3 or more neighbors are alive. Cell dies of over population." + alive);
         }
         //we need to specifically check if the cell is alive to prevent dead cells from being revived.
         else if (amountOfNeighbors >= 2 && alive)
         {
             alive = true;
-            print("2 or more neighbors are alive. Cell survives :D." + alive);
+            //   print("2 or more neighbors are alive. Cell survives :D." + alive);
 
         }
 
-        return alive;
+
 
 
 
@@ -130,7 +137,6 @@ These rules, which compare the behavior of the automaton to real life, can be co
 
                     // {
                     counter += neighborList[row, collum, depth];
-                    print(counter);
 
                     // }
 
@@ -140,8 +146,7 @@ These rules, which compare the behavior of the automaton to real life, can be co
 
 
 
-
-        print(counter);
+        amountOfNeighbors = counter;
         return counter;
 
     }
@@ -151,7 +156,11 @@ These rules, which compare the behavior of the automaton to real life, can be co
     //Helper methods.
     int BoolToInt(bool boolVal)
     {
-        return boolVal ? 1 : 0;
+        return boolVal == true ? 1 : 0;
+    }
+    bool IntToBool(int intVal)
+    {
+        return intVal == 1 ? true : false;
     }
 
 

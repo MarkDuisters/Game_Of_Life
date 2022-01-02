@@ -10,7 +10,7 @@ using UnityEngine;
 
 public class GenerateGrid : MonoBehaviour
 {
-    enum UPDATEMODE { CELL, ROW, GRID }
+    enum UPDATEMODE { CELL, ROW, DEPTH, GRID }
     [SerializeField]
     UPDATEMODE selectUpdateMode = UPDATEMODE.GRID;
 
@@ -49,8 +49,9 @@ public class GenerateGrid : MonoBehaviour
     Vector3 boundSize;
     Vector3 boundCenter;
 
-[Button]
-    void Start()
+    [Button]
+    //Used to be void Start, but now gets activated by the SystemUpdater script
+    public void Initialize()
     {
         //make sure only one instance exists.
         if (instance == null)
@@ -93,7 +94,7 @@ public class GenerateGrid : MonoBehaviour
     {
         InitializeObject();
         RemoveGrid();
-
+        gridInitialized = false;
         GameObject[,,] gridList = new GameObject[dimensions.x, dimensions.y, dimensions.z];
 
         int zPosOffset = -dimensions.z / 2; //we need to count the offset manually because the index of the loop can't be negative since it is used for our array.
@@ -131,15 +132,21 @@ public class GenerateGrid : MonoBehaviour
                 }
             }
             zPosOffset++;
-            if (setUpdateMode == ((int)UPDATEMODE.GRID))
+            if (setUpdateMode == ((int)UPDATEMODE.DEPTH))
             {
                 yield return null;
             }
         }
+        if (setUpdateMode == ((int)UPDATEMODE.GRID))
+        {
+            yield return null;
+        }
+
         amountOfCells = dimensions.x * dimensions.y * dimensions.z;
         gridListRead = gridList; //saves a copy of the list in case we need to read the values from another class.
-        gridInitialized = true;
+
         FitGridInCamera(cam, gridList);
+        gridInitialized = true;
     }
 
     void InitializeObject()
@@ -199,6 +206,7 @@ public class GenerateGrid : MonoBehaviour
 
                 }
                 CalculateBounds(gridListRead);
+                SystemUpdater.instance._updateEvent.RemoveAllListeners();
 #if UNITY_EDITOR
             }
 #endif
