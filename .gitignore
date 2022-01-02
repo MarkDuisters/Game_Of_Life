@@ -26,7 +26,7 @@
 #Make sure licensed plugins are not uploaded to the online repo and exclude them from git.
 /[Aa]ssets/Plugins/QFSW
 /[Aa]ssets/Plugins/Sirenix
-
+/[Aa]ssets/AmplifyShaderEditor
 # Visual Studio cache directory
 .vs/
 # Visual Studio Code cache directory

@@ -8,11 +8,14 @@ using UnityEngine;
 public class Cell : MonoBehaviour
 {
 
-    [SerializeField]
+
     public bool alive;
-    [SerializeField]
+
     public int amountOfNeighbors = 0;
-    [SerializeField]
+
     public Vector3Int listIndex;
+
+
+
 
 }

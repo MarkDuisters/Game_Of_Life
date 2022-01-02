@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 6727701942888000172}
   - component: {fileID: 1340237157690821039}
   - component: {fileID: 2546483248620322249}
-  - component: {fileID: 967095673340218839}
+  - component: {fileID: 1753476906}
+  - component: {fileID: 5496044228389263466}
   m_Layer: 0
   m_Name: CuteLilCubyBoy
   m_TagString: Untagged
@@ -27,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4350558108933171244}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -20}
+  m_LocalPosition: {x: 0, y: 0, z: -26.39}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -83,16 +84,32 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &967095673340218839
-BoxCollider:
+--- !u!114 &1753476906
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4350558108933171244}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97e91ea40b31dce47bf4c99f864d888f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  alive: 0
+  amountOfNeighbors: 2
+  listIndex: {x: 100, y: 100, z: 1100}
+--- !u!114 &5496044228389263466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4350558108933171244}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b7d4d9cae91f7a408efd7d07376f1c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  debugMaterial: {fileID: 2100000, guid: 03e5327fb50b8e24da668632bb54e59f, type: 2}
+  enableDebug: 1
