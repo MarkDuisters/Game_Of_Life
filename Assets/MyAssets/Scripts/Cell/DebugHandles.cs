@@ -20,7 +20,7 @@ public class DebugHandles : MonoBehaviour
             return;
         }
 
-        Handles.Label(transform.position, GetComponent<Cell_Behaviour>().listIndex.ToString());
+        Handles.Label(transform.position, $"{GetComponent<Cell_Behaviour>().listIndex.ToString()},{GetComponent<Cell_Behaviour>().alive}");
 
     }
 

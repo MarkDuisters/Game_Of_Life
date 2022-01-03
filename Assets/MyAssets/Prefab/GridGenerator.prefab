@@ -48,11 +48,13 @@ MonoBehaviour:
   refObject: {fileID: 4350558108933171244, guid: 026c4efca02e2df458dd5e67f352928e, type: 3}
   refMat: {fileID: 2100000, guid: 03e5327fb50b8e24da668632bb54e59f, type: 2}
   generateOnStart: 1
-  setDimensions: {x: 3, y: 3, z: 1}
+  randomCellOnInitialize: 1
+  removeGridOnInitialize: 1
+  setDimensions: {x: 123, y: 123, z: 1}
   spacing: 1
-  gridInitialized: 0
+  gridInitialized: 1
   cam: {fileID: 0}
-  amountOfCells: 9
+  amountOfCells: 169
 --- !u!114 &5360228582209035110
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -66,7 +68,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   getGrid: {fileID: 0}
-  updateDelay: 1
-  _updateEvent:
-    m_PersistentCalls:
-      m_Calls: []
+  updateDelay: 0.25
+  generation: 0

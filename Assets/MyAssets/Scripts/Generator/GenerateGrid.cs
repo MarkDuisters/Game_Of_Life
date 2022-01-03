@@ -10,21 +10,20 @@ using UnityEngine;
 
 public class GenerateGrid : MonoBehaviour
 {
-    enum UPDATEMODE { CELL, ROW, DEPTH, GRID }
-    [SerializeField]
-    UPDATEMODE selectUpdateMode = UPDATEMODE.GRID;
+    public enum UPDATEMODE { CELL, ROW, DEPTH, GRID }
+
+    public UPDATEMODE selectUpdateMode = UPDATEMODE.GRID;
 
     [SerializeField]
     GameObject refObject;
     [SerializeField]
     Material refMat;
-    [SerializeField]
-    bool generateOnStart = false;
 
-    [SerializeField]
-    Vector3Int setDimensions = new Vector3Int(1, 1, 0);
-    [SerializeField]
-    float spacing = 1f;
+    public bool generateOnStart = false;
+    public bool randomCellOnInitialize = false;
+    public bool removeGridOnInitialize = false;
+    public Vector3Int setDimensions = new Vector3Int(1, 1, 0);
+    public float spacing = 1f;
 
     //privates to store our grid array
 
@@ -49,9 +48,11 @@ public class GenerateGrid : MonoBehaviour
     Vector3 boundSize;
     Vector3 boundCenter;
 
+
     [Button]
+    [Command("Generate_grid")]
     //Used to be void Start, but now gets activated by the SystemUpdater script
-    public void Initialize()
+    public void Initialize(Vector3Int dimensions, float spacing = 1, bool generateOnStart = true, bool removeGrid = true, bool randomCells = true, int setUpdateMode = 2)
     {
         //make sure only one instance exists.
         if (instance == null)
@@ -64,37 +65,47 @@ public class GenerateGrid : MonoBehaviour
         }
 
         //Initialize and generate a grid.
+
+        InitializeObject();
         if (generateOnStart)
         {
-            GG(setDimensions, spacing, ((int)selectUpdateMode));
+            GG(dimensions, spacing, removeGrid, randomCells, (setUpdateMode));
         }
+
+
     }
+
 
     // Generate a 3D grid with xyz mapped flat on the world axis.
     //Invoke a coroutine so we can control the spawnrate.
-    [Command("Generate_grid")]
-    [Button("Generate grid")]
-    void GG(Vector3Int dimensions, float spacing = 1, int setUpdateMode = 2)
+
+    void GG(Vector3Int dimensions, float spacing = 1, bool removeGrid = false, bool randomCells = false, int setUpdateMode = 2)
     {
         //We need Unity's editor version of the coroutine to properly spawn our objects.
         //We also neet an if statement to check if we are playing or not to prevent the regular routine from partially running.
 #if UNITY_EDITOR
         if (Application.isEditor)
         {
-            EditorCoroutineUtility.StartCoroutine(GGCoroutine(dimensions, spacing, setUpdateMode), this);
+            EditorCoroutineUtility.StartCoroutine(GGCoroutine(dimensions, spacing, removeGrid, randomCells, setUpdateMode), this);
         }
 #endif
         if (Application.isPlaying)
         {
-            StartCoroutine(GGCoroutine(dimensions, spacing, setUpdateMode));
+            StartCoroutine(GGCoroutine(dimensions, spacing, removeGrid, randomCells, setUpdateMode));
         }
     }
 
-    IEnumerator GGCoroutine(Vector3Int dimensions, float spacing, int setUpdateMode = 2)
+    IEnumerator GGCoroutine(Vector3Int dimensions, float spacing, bool removeGrid, bool randomCells, int setUpdateMode = 2)
     {
-        InitializeObject();
-        RemoveGrid();
+        if (removeGrid)
+        {
+            RemoveGrid();
+
+        }
+
         gridInitialized = false;
+
+
         GameObject[,,] gridList = new GameObject[dimensions.x, dimensions.y, dimensions.z];
 
         int zPosOffset = -dimensions.z / 2; //we need to count the offset manually because the index of the loop can't be negative since it is used for our array.
@@ -107,6 +118,8 @@ public class GenerateGrid : MonoBehaviour
                 for (int x = 0; x < dimensions.x; x++)
                 {
 
+                    //we only generate the cells when we have removed the gird, otherwise we get de current child(index) and put this in the array.
+
                     GameObject clone = Instantiate(refObject, new Vector3(transform.position.x + xPosOffset * spacing, transform.position.y + -yPosOffset * spacing, transform.position.z + zPosOffset * spacing), Quaternion.identity, transform);
                     clone.name = clone.name + $"_{x},{y},{z}";
                     if (clone.GetComponent<Cell_Behaviour>() == null)
@@ -115,9 +128,13 @@ public class GenerateGrid : MonoBehaviour
                     }
                     gridList[x, y, z] = clone;
                     clone.GetComponent<Cell_Behaviour>().listIndex = new Vector3Int(x, y, z);//we store the index of the list on the cell locally for other script references.
-
+                                                                                             // clone.GetComponent<Cell_Behaviour>().randomOnStart = randomCells;
+                    clone.GetComponent<Cell_Behaviour>().RandomizeCell(randomCells);
 
                     xPosOffset++;
+
+
+
                     if (setUpdateMode == ((int)UPDATEMODE.CELL))
                     {
                         yield return null;
@@ -181,7 +198,7 @@ public class GenerateGrid : MonoBehaviour
     {
         try
         {
-
+            gridInitialized = false;
             int childCount = transform.childCount;
             GameObject[] getChildren = new GameObject[childCount];
             //Little bit of a hacky solution, But this way our foreachloop will keep running in the editor when the function gets invoked through Odin.
@@ -200,13 +217,18 @@ public class GenerateGrid : MonoBehaviour
                 foreach (GameObject go in getChildren)
                 {
                     if (go != null)
+                    {
+                        SystemUpdater.instance.ONupdateEvent -= go.GetComponent<Cell_Behaviour>().UpdateThisCell;
                         DestroyImmediate(go);
+                    }
                     //after destroying all the children we set our reference list to 0;
-                    gridListRead = new GameObject[0, 0, 0];
+
 
                 }
+
+                gridListRead = new GameObject[0, 0, 0];
                 CalculateBounds(gridListRead);
-                SystemUpdater.instance._updateEvent.RemoveAllListeners();
+
 #if UNITY_EDITOR
             }
 #endif
