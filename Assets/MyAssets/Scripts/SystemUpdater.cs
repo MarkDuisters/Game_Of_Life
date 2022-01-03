@@ -89,7 +89,7 @@ public class SystemUpdater : MonoBehaviour
         generation = generationCount;
 
         ONupdateEvent();
-
+        getGrid.UpdateAliveStateList();
     }
 
 

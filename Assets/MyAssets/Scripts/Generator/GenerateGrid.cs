@@ -26,8 +26,11 @@ public class GenerateGrid : MonoBehaviour
     public float spacing = 1f;
 
     //privates to store our grid array
+    GameObject[,,] gridListRead;
 
-    public GameObject[,,] gridListRead;
+    //we also place our alive state in a grid on the same index so that each cell can check their neighbour status.
+    public bool[,,] gridAliveStateRead;
+
     public bool gridInitialized = false;
 
     //Create a singleton and a static reference to itself
@@ -107,6 +110,7 @@ public class GenerateGrid : MonoBehaviour
 
 
         GameObject[,,] gridList = new GameObject[dimensions.x, dimensions.y, dimensions.z];
+        bool[,,] gridListAlive = new bool[dimensions.x, dimensions.y, dimensions.z];
 
         int zPosOffset = -dimensions.z / 2; //we need to count the offset manually because the index of the loop can't be negative since it is used for our array.
         for (int z = 0; z < dimensions.z; z++)
@@ -127,9 +131,10 @@ public class GenerateGrid : MonoBehaviour
                         clone.AddComponent<Cell_Behaviour>();
                     }
                     gridList[x, y, z] = clone;
+
                     clone.GetComponent<Cell_Behaviour>().listIndex = new Vector3Int(x, y, z);//we store the index of the list on the cell locally for other script references.
-                                                                                             // clone.GetComponent<Cell_Behaviour>().randomOnStart = randomCells;
                     clone.GetComponent<Cell_Behaviour>().RandomizeCell(randomCells);
+                    gridListAlive[x, y, z] = clone.GetComponent<Cell_Behaviour>().alive;//store the generated cell's alive state
 
                     xPosOffset++;
 
@@ -160,10 +165,26 @@ public class GenerateGrid : MonoBehaviour
         }
 
         amountOfCells = dimensions.x * dimensions.y * dimensions.z;
-        gridListRead = gridList; //saves a copy of the list in case we need to read the values from another class.
+        gridListRead = gridList; //saves a copy of the list for later use within this class..
+        gridAliveStateRead = gridListAlive;//save a copy of the generated grid's current alive state. We need to manually update the state of this list each generation.
 
         FitGridInCamera(cam, gridList);
         gridInitialized = true;
+    }
+
+    [Button]
+    public void UpdateAliveStateList()
+    {
+        for (int z = 0; z < gridListRead.GetLength(2); z++)
+        {
+            for (int y = 0; y < gridListRead.GetLength(1); y++)
+            {
+                for (int x = 0; x < gridListRead.GetLength(0); x++)
+                {
+                    gridAliveStateRead[x, y, z] = gridListRead[x, y, z].GetComponent<Cell_Behaviour>().alive;
+                }
+            }
+        }
     }
 
     void InitializeObject()

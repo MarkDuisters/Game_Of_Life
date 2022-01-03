@@ -50,11 +50,11 @@ MonoBehaviour:
   generateOnStart: 1
   randomCellOnInitialize: 1
   removeGridOnInitialize: 1
-  setDimensions: {x: 123, y: 123, z: 1}
+  setDimensions: {x: 33, y: 33, z: 1}
   spacing: 1
-  gridInitialized: 1
+  gridInitialized: 0
   cam: {fileID: 0}
-  amountOfCells: 169
+  amountOfCells: 9
 --- !u!114 &5360228582209035110
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67,6 +67,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b154941b7a896549b3343a4d172d3ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  getGrid: {fileID: 0}
+  getGrid: {fileID: 7160332886403002571}
   updateDelay: 0.25
-  generation: 0
+  generation: 6

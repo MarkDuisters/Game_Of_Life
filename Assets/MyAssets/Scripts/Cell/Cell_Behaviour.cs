@@ -18,9 +18,9 @@ These rules, which compare the behavior of the automaton to real life, can be co
     Any dead cell with three live neighbours becomes a live cell.
     All other live cells die in the next generation. Similarly, all other dead cells stay dead.*/
     [SerializeField]
-    int[,,] neighborMatrix = new int[3, 3, 3];
+    bool[,,] neighborMatrix;
 
-
+    bool[,,] neighborList = new bool[3, 3, 3];
 
 
     //We store the neighbors in a 3x3 boolean matrix, for each "alive" neighbor we count +1
@@ -57,11 +57,14 @@ These rules, which compare the behavior of the automaton to real life, can be co
         //Note that the middle value of the whole matrix represents our cell. We should not take this cell into account and ignore it in our count.
         //Use the below reference to figure out how the array is stored. This is important when checking neighbors to not get out of bounds.
         //The matrix represents a 2d slice.
-        /*[0, 0, 0][1, 0, 0][2 , 0, 0] = 0;
-          [0, 1, 0][1, 1, 0][2, 1, 0] = 0;
-          [0, 2, 0][1, 2, 0][2, 2, 0] = 0;*/
+        /*[0, 0, 0][1, 0, 0][2 , 0, 0]
+          [0, 1, 0][1, 1, 0][2, 1, 0]
+          [0, 2, 0][1, 2, 0][2, 2, 0]*/
 
-        neighborMatrix = GetNeighbors(GenerateGrid.instance.gridListRead);
+        neighborMatrix = GetNeighbors(GenerateGrid.instance.gridAliveStateRead);
+
+
+
 
         amountOfNeighbors = CountNeighbors(neighborMatrix);
 
@@ -72,26 +75,26 @@ These rules, which compare the behavior of the automaton to real life, can be co
         if (amountOfNeighbors < 2)
         {
             alive = false;
-            print("Not enough neighbors alive to survive. The Cell dies of lonelyness :(." + alive);
+            // print("Not enough neighbors alive to survive. The Cell dies of lonelyness :(." + alive);
 
 
         }
         //This one should only be checked if the cell is not alive as it controlls rebrith.
-        else if (amountOfNeighbors == 3)
+        else if (amountOfNeighbors == 3 && !alive)
         {
             alive = true;
-            print("Exactly 3 neighbors found. Congratulations the Cell had a baby. (Dead cell turned back to life)." + alive);
+            // print("Exactly 3 neighbors found. Congratulations the Cell had a baby. (Dead cell turned back to life)." + alive);
         }
         else if (amountOfNeighbors > 3)
         {
             alive = false;
-            print("3 or more neighbors are alive. Cell dies of over population." + alive);
+            // print("3 or more neighbors are alive. Cell dies of over population." + alive);
         }
         //we need to specifically check if the cell is alive to prevent dead cells from being revived.
-        else if (amountOfNeighbors >= 2)
+        else if (amountOfNeighbors >= 2 && alive)
         {
             alive = true;
-            print("2 or more neighbors are alive. Cell survives :D." + alive);
+            // print("2 or more neighbors are alive. Cell survives :D." + alive);
 
         }
 
@@ -102,94 +105,75 @@ These rules, which compare the behavior of the automaton to real life, can be co
     }
     //Although we have a 3D array, the first test will leave the z paramter on 0 so that we work in a 2D manner to simplefy testing currently.
     [Button]
-    int[,,] GetNeighbors(GameObject[,,] gridList)
+    bool[,,] GetNeighbors(bool[,,] aliveList)
     {
         //listInex is passed on by te cell its stored index and should refence its own object in the gridlist matrix.
         //do not forget to increase the z length ofthis array once we implement a 3d matrix.
-        int[,,] neighborList = new int[3, 3, 3];
+
 
 
         //Calculation offset needed based on the current cell's index to get its neighbors.
-        /*         [-1, -1, 0][0, +1, 0][+1, -1, 0] = 0;
-                  [-1, 0, 0][1, 1, 0][+1, 0, 0] = 0;
-                  [-1, +1, 0][0, +1, 0][+1, +1, 0] = 0;*/
-        #region 
-        //We have to check whether the grid index has a valid object to call to prevent errors. might as well do it inline.
-        //It might look a bit crowded. But at the moment I could not find a way to write these lines any shorter. I opted for inline ifstatements too keep my sanity with the document length.
-        //Since we support a 3D grid, we will have to check the current cell's slice, the slice in front and the slice behind him. We can simply copy the matrix for the regular slice and change the z index to + or -.
-        /*   neighborList[0, 0, 0] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x - 1, listIndex.y - 1, listIndex.z - 1)) != false ? BoolToInt(gridList[listIndex.x - 1, listIndex.y - 1, listIndex.z - 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[1, 0, 0] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x, listIndex.y - 1, listIndex.z - 1)) != false ? BoolToInt(gridList[listIndex.x, listIndex.y - 1, listIndex.z - 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[2, 0, 0] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x + 1, listIndex.y - 1, listIndex.z - 1)) != false ? BoolToInt(gridList[listIndex.x + 1, listIndex.y - 1, listIndex.z - 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[0, 1, 0] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x - 1, listIndex.y, listIndex.z - 1)) != false ? BoolToInt(gridList[listIndex.x - 1, listIndex.y, listIndex.z - 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[1, 1, 0] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x, listIndex.y, listIndex.z - 1)) != false ? BoolToInt(gridList[listIndex.x, listIndex.y, listIndex.z - 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[2, 1, 0] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x + 1, listIndex.y, listIndex.z - 1)) != false ? BoolToInt(gridList[listIndex.x + 1, listIndex.y, listIndex.z - 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[0, 2, 0] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x - 1, listIndex.y + 1, listIndex.z - 1)) != false ? BoolToInt(gridList[listIndex.x - 1, listIndex.y + 1, listIndex.z - 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[1, 2, 0] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x, listIndex.y + 1, listIndex.z - 1)) != false ? BoolToInt(gridList[listIndex.x, listIndex.y + 1, listIndex.z - 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[2, 2, 0] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x + 1, listIndex.y + 1, listIndex.z + -1)) != false ? BoolToInt(gridList[listIndex.x + 1, listIndex.y + 1, listIndex.z - 1].GetComponent<Cell_Behaviour>().alive) : 0;
+        /*           [-1, -1, 0][0, +1, 0][+1, -1, 0]
+                     [-1, 0, 0] [1, 1, 0] [+1, 0, 0]
+                     [-1, +1, 0][0, +1, 0][+1, +1, 0]*/
 
-           neighborList[0, 0, 1] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x - 1, listIndex.y - 1, listIndex.z)) != false ? BoolToInt(gridList[listIndex.x - 1, listIndex.y - 1, listIndex.z].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[1, 0, 1] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x, listIndex.y - 1, listIndex.z)) != false ? BoolToInt(gridList[listIndex.x, listIndex.y - 1, listIndex.z].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[2, 0, 1] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x + 1, listIndex.y - 1, listIndex.z)) != false ? BoolToInt(gridList[listIndex.x + 1, listIndex.y - 1, listIndex.z].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[0, 1, 1] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x - 1, listIndex.y, listIndex.z)) != false ? BoolToInt(gridList[listIndex.x - 1, listIndex.y, listIndex.z].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[1, 1, 1] = 0;//This value is always 0 as it represents the current cell itself and should never be taken into your calculation.
-           neighborList[2, 1, 1] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x + 1, listIndex.y, listIndex.z)) != false ? BoolToInt(gridList[listIndex.x + 1, listIndex.y, listIndex.z].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[0, 2, 1] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x - 1, listIndex.y + 1, listIndex.z)) != false ? BoolToInt(gridList[listIndex.x - 1, listIndex.y + 1, listIndex.z].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[1, 2, 1] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x, listIndex.y + 1, listIndex.z)) != false ? BoolToInt(gridList[listIndex.x, listIndex.y + 1, listIndex.z].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[2, 2, 1] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x + 1, listIndex.y + 1, listIndex.z)) != false ? BoolToInt(gridList[listIndex.x + 1, listIndex.y + 1, listIndex.z].GetComponent<Cell_Behaviour>().alive) : 0;
 
-           neighborList[0, 0, 2] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x - 1, listIndex.y - 1, listIndex.z + 1)) != false ? BoolToInt(gridList[listIndex.x - 1, listIndex.y - 1, listIndex.z + 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[1, 0, 2] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x, listIndex.y - 1, listIndex.z + 1)) != false ? BoolToInt(gridList[listIndex.x, listIndex.y - 1, listIndex.z + 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[2, 0, 2] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x + 1, listIndex.y - 1, listIndex.z + 1)) != false ? BoolToInt(gridList[listIndex.x + 1, listIndex.y - 1, listIndex.z + 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[0, 1, 2] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x - 1, listIndex.y, listIndex.z + 1)) != false ? BoolToInt(gridList[listIndex.x - 1, listIndex.y, listIndex.z + 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[1, 1, 2] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x, listIndex.y, listIndex.z + 1)) != false ? BoolToInt(gridList[listIndex.x, listIndex.y, listIndex.z + 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[2, 1, 2] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x + 1, listIndex.y, listIndex.z + 1)) != false ? BoolToInt(gridList[listIndex.x + 1, listIndex.y, listIndex.z + 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[0, 2, 2] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x - 1, listIndex.y + 1, listIndex.z + 1)) != false ? BoolToInt(gridList[listIndex.x - 1, listIndex.y + 1, listIndex.z + 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[1, 2, 2] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x, listIndex.y + 1, listIndex.z + 1)) != false ? BoolToInt(gridList[listIndex.x, listIndex.y + 1, listIndex.z + 1].GetComponent<Cell_Behaviour>().alive) : 0;
-           neighborList[2, 2, 2] = ArrayHasIndex(gridList, new Vector3Int(listIndex.x + 1, listIndex.y + 1, listIndex.z + 1)) != false ? BoolToInt(gridList[listIndex.x + 1, listIndex.y + 1, listIndex.z + 1].GetComponent<Cell_Behaviour>().alive) : 0;
+        //keep in mind that the vector3Int values are offsets on base 1. 
 
-   */
-        #endregion
-        //top left                                                                               //top                                                                                  //top right
-        SetNeighBorListValue(ref neighborList, new Vector3Int(-1, -1, 0), gridList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(0, -1, 0), gridList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(1, -1, 0), gridList, listIndex);
-        //left                                                                                   //mid/cell itself                                                                      //right
-        SetNeighBorListValue(ref neighborList, new Vector3Int(-1, 0, 0), gridList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(0, 0, 0), gridList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(1, 0, 0), gridList, listIndex);
-        //bottom left                                                                            //bottom                                                                               //bottom right
-        SetNeighBorListValue(ref neighborList, new Vector3Int(-1, 1, 0), gridList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(0, 1, 0), gridList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(1, 1, 0), gridList, listIndex);
 
+        // middle grid
+        //top left                                                            //top                                                                //top right
+        SetNeighBorListValue(new Vector3Int(-1, -1, 0), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(0, -1, 0), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, -1, 0), aliveList, listIndex);
+        //left                                                               //mid/cell itself. The cell's own value will always be false          //right
+        SetNeighBorListValue(new Vector3Int(-1, 0, 0), aliveList, listIndex); neighborList[1, 1, 1] = false;                                  /**/  SetNeighBorListValue(new Vector3Int(1, 0, 0), aliveList, listIndex);
+        //bottom left                                                        //bottom                                                            //bottom right
+        SetNeighBorListValue(new Vector3Int(-1, 1, 0), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(0, 1, 0), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 1, 0), aliveList, listIndex);
+
+
+//we only need to take the front and back cells into account if we aren on an actual 3d grid.
+        if (aliveList.GetLength(2) > 1)
+        {
+            // front grid
+            //top left                                                            //top                                                                //top right
+            SetNeighBorListValue(new Vector3Int(-1, -1, -1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(0, -1, -1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, -1, -1), aliveList, listIndex);
+            //left                                                               //mid/cell itself. The cell's own value will always be false          //right
+            SetNeighBorListValue(new Vector3Int(-1, 0, -1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 1, -1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 0, -1), aliveList, listIndex);
+            //bottom left                                                        //bottom                                                            //bottom right
+            SetNeighBorListValue(new Vector3Int(-1, 1, -1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(0, 1, -1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 1, -1), aliveList, listIndex);
+
+
+
+
+            // back grid
+            //top left                                                            //top                                                                //top right
+            SetNeighBorListValue(new Vector3Int(-1, -1, 1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(0, -1, 1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, -1, 1), aliveList, listIndex);
+            //left                                                               //mid/cell itself. The cell's own value will always be false          //right
+            SetNeighBorListValue(new Vector3Int(-1, 0, 1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 1, 1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 0, 1), aliveList, listIndex);
+            //bottom left                                                        //bottom                                                            //bottom right
+            SetNeighBorListValue(new Vector3Int(-1, 1, 1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(0, 1, 1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 1, 1), aliveList, listIndex);
+        }
 
 
         return neighborList;
     }
 
-    void SetNeighBorListValue(ref int[,,] neighborList, Vector3Int indexOffset, GameObject[,,] gridList, Vector3Int listIndex)
+    void SetNeighBorListValue(Vector3Int indexOffset, bool[,,] aliveList, Vector3Int listIndex)
     {
-        neighborList[1 + indexOffset.x, 1 + indexOffset.y, 1 + indexOffset.z] = ArrayHasIndex(gridList, listIndex + indexOffset) ? BoolToInt(gridList[listIndex.x + indexOffset.x, listIndex.y + indexOffset.y, listIndex.z + indexOffset.z].GetComponent<Cell_Behaviour>().alive) : 0;
+        neighborList[1 + indexOffset.x, 1 + indexOffset.y, 1 + indexOffset.z] = ArrayHasIndex(aliveList, listIndex + indexOffset) ? aliveList[listIndex.x + indexOffset.x, listIndex.y + indexOffset.y, listIndex.z + indexOffset.z] : false;
 
     }
 
-    int CountNeighbors(int[,,] neighborList)
+    int CountNeighbors(bool[,,] neighborList)
     {
         int counter = 0;
-        for (int depth = 0; depth < neighborList.GetLength(2); depth++)
+
+        foreach (bool aliveState in neighborList)
         {
-            for (int collum = 0; collum < neighborList.GetLength(1); collum++)
-            {
-                for (int row = 0; row < neighborList.GetLength(0); row++)
-                {
-
-
-                    // {
-                    counter += neighborList[row, collum, depth];
-
-                    // }
-
-                }
-            }
+            counter += BoolToInt(aliveState);//Since we work with bools, we need to conver this to an integer so that we can count our total neighbor amount.
         }
 
-
-
         amountOfNeighbors = counter;
+        //     // print(counter);
         return counter;
 
     }
@@ -199,8 +183,9 @@ These rules, which compare the behavior of the automaton to real life, can be co
     //Helper methods.
     int BoolToInt(bool boolVal)
     {
-        return boolVal == true ? 1 : 0;
+        return boolVal ? 1 : 0;
     }
+
     bool IntToBool(int intVal)
     {
         return intVal == 1 ? true : false;
@@ -209,10 +194,10 @@ These rules, which compare the behavior of the automaton to real life, can be co
 
 
     //Checks if an index actually exist in an array. (Really wish this was nativally supported)
-    bool ArrayHasIndex(GameObject[,,] gridList, Vector3Int index)
+    bool ArrayHasIndex(bool[,,] aliveList, Vector3Int index)
     {
         //only return true if the index value fits within the 3d array bounds.
-        if (index.x >= 0 && index.x < gridList.GetLength(0) && index.y >= 0 && index.y < gridList.GetLength(1) && index.z >= 0 && index.z < gridList.GetLength(2))
+        if (index.x >= 0 && index.x < aliveList.GetLength(0) && index.y >= 0 && index.y < aliveList.GetLength(1) && index.z >= 0 && index.z < aliveList.GetLength(2))
         {
             return true;
         }

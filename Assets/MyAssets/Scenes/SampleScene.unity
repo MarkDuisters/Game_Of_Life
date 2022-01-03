@@ -811,7 +811,7 @@ Camera:
   far clip plane: 1000
   field of view: 56.986908
   orthographic: 1
-  orthographic size: 8.940358
+  orthographic size: 0.1
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -914,13 +914,9 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 28642098750739137, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
-      propertyPath: editMode
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 5360228582209035110, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
-      propertyPath: m_Enabled
-      value: 1
+      propertyPath: updateDelay
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 7160332886403002568, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
       propertyPath: m_RootOrder
@@ -975,29 +971,28 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 963194227}
     - target: {fileID: 7160332886403002571, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
-      propertyPath: amountOfCells
-      value: 169
-      objectReference: {fileID: 0}
-    - target: {fileID: 7160332886403002571, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
-      propertyPath: generateOnStart
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7160332886403002571, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
       propertyPath: gridInitialized
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7160332886403002571, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
       propertyPath: setDimensions.x
-      value: 13
+      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 7160332886403002571, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
       propertyPath: setDimensions.y
-      value: 13
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 7160332886403002571, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
+      propertyPath: setDimensions.z
+      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 7160332886403002571, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
       propertyPath: randomCellOnInitialize
       value: 1
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 28642098750739137, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
+    - target: {fileID: 7160332886403002571, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
+      propertyPath: removeGridOnInitialize
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2f9458053debc244bbd79ec0420e0542, type: 3}
