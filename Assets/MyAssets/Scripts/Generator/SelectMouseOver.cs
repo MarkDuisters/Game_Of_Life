@@ -14,16 +14,14 @@ public class SelectMouseOver : MonoBehaviour
         {
             GetComponent<Cell_Behaviour>().alive = !GetComponent<Cell_Behaviour>().alive;
             GetComponent<Cell_Behaviour>().GetComponent<MeshRenderer>().enabled = GetComponent<Cell_Behaviour>().alive;
-            print("got clicked lol");
         }
     }
     void OnMouseEnter()
     {
         if (Input.GetKey(KeyCode.Mouse0))
         {
- GetComponent<Cell_Behaviour>().alive = !GetComponent<Cell_Behaviour>().alive;
+            GetComponent<Cell_Behaviour>().alive = !GetComponent<Cell_Behaviour>().alive;
             GetComponent<Cell_Behaviour>().GetComponent<MeshRenderer>().enabled = GetComponent<Cell_Behaviour>().alive;
-            print("got clicked lol");
         }
     }
 }

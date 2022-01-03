@@ -218,7 +218,10 @@ public class GenerateGrid : MonoBehaviour
                 {
                     if (go != null)
                     {
-                        SystemUpdater.instance.ONupdateEvent -= go.GetComponent<Cell_Behaviour>().UpdateThisCell;
+                        if (SystemUpdater.instance.ONupdateEvent != null)
+                        {
+                            SystemUpdater.instance.ONupdateEvent -= go.GetComponent<Cell_Behaviour>().UpdateThisCell;
+                        }
                         DestroyImmediate(go);
                     }
                     //after destroying all the children we set our reference list to 0;

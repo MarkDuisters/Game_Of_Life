@@ -61,23 +61,34 @@ public class SystemUpdater : MonoBehaviour
         }
 
     }
+
+
+
     // Update is called once per frame
     void SystemUpdate()
     {
         //        print("updating");
         if (Time.time >= oldTime + updateDelay)
         {
-            generationCount++;
-            generation = generationCount;
 
-            ONupdateEvent();
-
+            UpdateGeneration();
             oldTime = Time.time;
 
 
         }
 
 
+
+    }
+
+
+    [Button]
+    void UpdateGeneration()
+    {
+        generationCount++;
+        generation = generationCount;
+
+        ONupdateEvent();
 
     }
 
