@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using Sirenix.OdinInspector;
+using QFSW.QC;
 
 //When adding a system udpate to our object, we always need a grid to pull data from.
 [RequireComponent(typeof(GenerateGrid))]
@@ -43,8 +44,8 @@ public class SystemUpdater : MonoBehaviour
         getGrid = GetComponent<GenerateGrid>();
 
 
-        getGrid.Initialize(getGrid.setDimensions, getGrid.spacing, getGrid.generateOnStart, getGrid.removeGridOnInitialize, getGrid.randomCellOnInitialize, ((int)getGrid.selectUpdateMode));
-
+        getGrid.Initialize(getGrid.setDimensions, getGrid.spacing, getGrid.generateOnStart, getGrid.randomCellOnInitialize, ((int)getGrid.selectUpdateMode));
+        ONupdateEvent += UpdateAliveState;
 
     }
 
@@ -89,8 +90,18 @@ public class SystemUpdater : MonoBehaviour
         generation = generationCount;
 
         ONupdateEvent();
-        getGrid.UpdateAliveStateList();
+
     }
 
 
+    void UpdateAliveState()
+    {
+        getGrid.UpdateAliveStateList();
+    }
+
+    [Command]
+    void SetUpdateDelay(float delay = 0.5f)
+    {
+        updateDelay = delay;
+    }
 }

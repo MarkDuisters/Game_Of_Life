@@ -9,7 +9,11 @@ public class Cell : MonoBehaviour
 {
 
 
+    //rules
     public bool alive;
+    public int minNeigbors = 2;
+    public int birthNeighbors = 3;
+    public int maxNeighbors = 3;
 
     public int amountOfNeighbors = 0;
 

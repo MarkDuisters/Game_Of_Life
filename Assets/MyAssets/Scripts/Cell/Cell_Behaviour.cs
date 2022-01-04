@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
 using UnityEngine.Events;
+using QFSW.QC;
 
 public class Cell_Behaviour : Cell
 {
@@ -20,7 +21,6 @@ These rules, which compare the behavior of the automaton to real life, can be co
     [SerializeField]
     bool[,,] neighborMatrix;
 
-    bool[,,] neighborList = new bool[3, 3, 3];
 
 
     //We store the neighbors in a 3x3 boolean matrix, for each "alive" neighbor we count +1
@@ -61,6 +61,7 @@ These rules, which compare the behavior of the automaton to real life, can be co
           [0, 1, 0][1, 1, 0][2, 1, 0]
           [0, 2, 0][1, 2, 0][2, 2, 0]*/
 
+
         neighborMatrix = GetNeighbors(GenerateGrid.instance.gridAliveStateRead);
 
 
@@ -72,7 +73,10 @@ These rules, which compare the behavior of the automaton to real life, can be co
         //We have to make sure that every state is reachable with the given value conditions.
         //we to not need to check the alive state of <2 or >3 since either scenario dead or alive would result in that status being set to false/not alive.
         //We do need to check the alive state for == 3 and >=2 since it matters wether those values should be handled when alive or dead.
-        if (amountOfNeighbors < 2)
+
+
+
+        if (amountOfNeighbors < minNeigbors)
         {
             alive = false;
             // print("Not enough neighbors alive to survive. The Cell dies of lonelyness :(." + alive);
@@ -80,18 +84,18 @@ These rules, which compare the behavior of the automaton to real life, can be co
 
         }
         //This one should only be checked if the cell is not alive as it controlls rebrith.
-        else if (amountOfNeighbors == 3 && !alive)
+        else if (amountOfNeighbors == maxNeighbors && !alive)
         {
             alive = true;
             // print("Exactly 3 neighbors found. Congratulations the Cell had a baby. (Dead cell turned back to life)." + alive);
         }
-        else if (amountOfNeighbors > 3)
+        else if (amountOfNeighbors > maxNeighbors)
         {
             alive = false;
             // print("3 or more neighbors are alive. Cell dies of over population." + alive);
         }
         //we need to specifically check if the cell is alive to prevent dead cells from being revived.
-        else if (amountOfNeighbors >= 2 && alive)
+        else if (amountOfNeighbors >= minNeigbors && alive)
         {
             alive = true;
             // print("2 or more neighbors are alive. Cell survives :D." + alive);
@@ -121,43 +125,44 @@ These rules, which compare the behavior of the automaton to real life, can be co
         //keep in mind that the vector3Int values are offsets on base 1. 
 
 
+        bool[,,] neighborList = new bool[3, 3, 3];
+
+
+
+        // front grid
+        //top left                                                            //top                                                                //top right
+        SetNeighBorListValue(ref neighborList, new Vector3Int(-1, -1, -1), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(0, -1, -1), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(1, -1, -1), aliveList, listIndex);
+        //left                                                               //mid/cell itself. The cell's own value will always be false          //right
+        SetNeighBorListValue(ref neighborList, new Vector3Int(-1, 0, -1), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(-1, -1, -1), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(1, 0, -1), aliveList, listIndex);
+        //bottom left                                                        //bottom                                                            //bottom right
+        SetNeighBorListValue(ref neighborList, new Vector3Int(-1, 1, -1), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(0, 1, -1), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(1, 1, -1), aliveList, listIndex);
+
+
         // middle grid
         //top left                                                            //top                                                                //top right
-        SetNeighBorListValue(new Vector3Int(-1, -1, 0), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(0, -1, 0), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, -1, 0), aliveList, listIndex);
+        SetNeighBorListValue(ref neighborList, new Vector3Int(-1, -1, 0), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(0, -1, 0), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(1, -1, 0), aliveList, listIndex);
         //left                                                               //mid/cell itself. The cell's own value will always be false          //right
-        SetNeighBorListValue(new Vector3Int(-1, 0, 0), aliveList, listIndex); neighborList[1, 1, 1] = false;                                  /**/  SetNeighBorListValue(new Vector3Int(1, 0, 0), aliveList, listIndex);
+        SetNeighBorListValue(ref neighborList, new Vector3Int(-1, 0, 0), aliveList, listIndex); neighborList[1, 1, 1] = false;                                                     /**/  SetNeighBorListValue(ref neighborList, new Vector3Int(1, 0, 0), aliveList, listIndex);
         //bottom left                                                        //bottom                                                            //bottom right
-        SetNeighBorListValue(new Vector3Int(-1, 1, 0), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(0, 1, 0), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 1, 0), aliveList, listIndex);
-
-
-//we only need to take the front and back cells into account if we aren on an actual 3d grid.
-        if (aliveList.GetLength(2) > 1)
-        {
-            // front grid
-            //top left                                                            //top                                                                //top right
-            SetNeighBorListValue(new Vector3Int(-1, -1, -1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(0, -1, -1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, -1, -1), aliveList, listIndex);
-            //left                                                               //mid/cell itself. The cell's own value will always be false          //right
-            SetNeighBorListValue(new Vector3Int(-1, 0, -1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 1, -1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 0, -1), aliveList, listIndex);
-            //bottom left                                                        //bottom                                                            //bottom right
-            SetNeighBorListValue(new Vector3Int(-1, 1, -1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(0, 1, -1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 1, -1), aliveList, listIndex);
+        SetNeighBorListValue(ref neighborList, new Vector3Int(-1, 1, 0), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(0, 1, 0), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(1, 1, 0), aliveList, listIndex);
 
 
 
+        // back grid
+        //top left                                                            //top                                                                //top right
+        SetNeighBorListValue(ref neighborList, new Vector3Int(-1, -1, 1), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(0, -1, 1), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(1, -1, 1), aliveList, listIndex);
+        //left                                                               //mid/cell itself. The cell's own value will always be false          //right
+        SetNeighBorListValue(ref neighborList, new Vector3Int(-1, 0, 1), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(1, 1, 1), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(1, 0, 1), aliveList, listIndex);
+        //bottom left                                                        //bottom                                                            //bottom right
+        SetNeighBorListValue(ref neighborList, new Vector3Int(-1, 1, 1), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(0, 1, 1), aliveList, listIndex); SetNeighBorListValue(ref neighborList, new Vector3Int(1, 1, 1), aliveList, listIndex);
 
-            // back grid
-            //top left                                                            //top                                                                //top right
-            SetNeighBorListValue(new Vector3Int(-1, -1, 1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(0, -1, 1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, -1, 1), aliveList, listIndex);
-            //left                                                               //mid/cell itself. The cell's own value will always be false          //right
-            SetNeighBorListValue(new Vector3Int(-1, 0, 1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 1, 1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 0, 1), aliveList, listIndex);
-            //bottom left                                                        //bottom                                                            //bottom right
-            SetNeighBorListValue(new Vector3Int(-1, 1, 1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(0, 1, 1), aliveList, listIndex); SetNeighBorListValue(new Vector3Int(1, 1, 1), aliveList, listIndex);
-        }
+
 
 
         return neighborList;
     }
 
-    void SetNeighBorListValue(Vector3Int indexOffset, bool[,,] aliveList, Vector3Int listIndex)
+    void SetNeighBorListValue(ref bool[,,] neighborList, Vector3Int indexOffset, bool[,,] aliveList, Vector3Int listIndex)
     {
         neighborList[1 + indexOffset.x, 1 + indexOffset.y, 1 + indexOffset.z] = ArrayHasIndex(aliveList, listIndex + indexOffset) ? aliveList[listIndex.x + indexOffset.x, listIndex.y + indexOffset.y, listIndex.z + indexOffset.z] : false;
 
