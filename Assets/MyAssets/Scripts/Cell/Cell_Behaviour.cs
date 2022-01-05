@@ -44,6 +44,16 @@ These rules, which compare the behavior of the automaton to real life, can be co
 
     }
 
+    public void SetCell(bool setValue)
+    {
+
+
+        alive = setValue;
+        GetComponent<MeshRenderer>().enabled = alive;
+
+
+    }
+
     public void UpdateThisCell()
     {
 

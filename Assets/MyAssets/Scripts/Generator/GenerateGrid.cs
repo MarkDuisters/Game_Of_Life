@@ -26,6 +26,8 @@ public class GenerateGrid : MonoBehaviour
     public Vector3Int setDimensions = new Vector3Int(1, 1, 1);
     [Header("If a pattern is set, setDimension will be ignored.")]
     public Texture2D usePattern;
+    public bool invertPattern = false;
+    [Header("")]
     public float spacing = 1f;
 
     //privates to store our grid array
@@ -158,10 +160,12 @@ public class GenerateGrid : MonoBehaviour
                     }
                     else
                     {
-                        gridListAlive[x, y, z] = ConvertPixelToBool(usePattern.GetPixel(x, y), true);
-                    }
-                    clone.GetComponent<Cell_Behaviour>().listIndex = new Vector3Int(x, y, z);//we store the index of the list on the cell locally for other script references.
+                        clone.GetComponent<Cell_Behaviour>().SetCell(ConvertPixelToBool(usePattern.GetPixel(x, y), invertPattern));
 
+                        gridListAlive[x, y, z] = clone.GetComponent<Cell_Behaviour>().alive;
+                    }
+
+                    clone.GetComponent<Cell_Behaviour>().listIndex = new Vector3Int(x, y, z);//we store the index of the list on the cell locally for other script references.
                     clone.GetComponent<Cell_Behaviour>().minNeigbors = minNeigbors;
                     clone.GetComponent<Cell_Behaviour>().maxNeighbors = maxNeighbors;
                     clone.GetComponent<Cell_Behaviour>().birthNeighbors = birthNeigbors;
@@ -217,13 +221,21 @@ public class GenerateGrid : MonoBehaviour
 
     bool ConvertPixelToBool(Color getPixelColor, bool invert)
     {
+
+        bool colorToBool = false;
         if (getPixelColor.grayscale > 0.5f)
         {
-            return !invert ? true : false;
+            colorToBool = !invert ? true : false;
+            Debug.Log(colorToBool);
+            return colorToBool;
+
         }
         else
         {
-            return !invert ? false : true;
+            colorToBool = !invert ? false : false;
+            Debug.Log(colorToBool);
+            return colorToBool;
+
         }
 
     }
